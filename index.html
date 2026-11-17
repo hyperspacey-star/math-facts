@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abigail's Subtraction Adventure — Regrouping Across Zeros</title>
+  <title>Abigail's Subtraction Adventure — Regrouping &amp; Mastery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
@@ -19,17 +19,17 @@
         <div class="avatar-badge" aria-hidden="true">🌟</div>
         <div>
           <h1>Abigail's Subtraction Studio</h1>
-          <p class="subtitle">Master 3-Digit Subtraction Across Zeros!</p>
+          <p class="subtitle">Master 3-Digit Subtraction &amp; Earn TV Time!</p>
         </div>
       </div>
 
       <div class="controls-and-stats">
-        <div class="mode-selector" role="group" aria-label="Problem Type">
-          <label for="difficulty-select" class="mode-label">Mode:</label>
+        <div class="mode-selector" role="group" aria-label="Skill Level">
+          <label for="difficulty-select" class="mode-label">Level:</label>
           <select id="difficulty-select" class="mode-dropdown">
-            <option value="mixed" selected>Mixed (e.g., 500 − 320 &amp; 400 − 275)</option>
-            <option value="tens">Friendly Tens (e.g., 500 − 320)</option>
-            <option value="ones">Hundreds, Tens &amp; Ones (e.g., 400 − 275)</option>
+            <option value="level1">Level 1: Friendly Tens (500 − 320)</option>
+            <option value="level2" selected>Level 2: Across Zeros Mix (400 − 275)</option>
+            <option value="level3">Level 3: Full 3-Digit Regrouping (542 − 388)</option>
           </select>
         </div>
 
@@ -59,8 +59,94 @@
       </div>
     </header>
 
+    <!-- TV Reward & Mastery Progress Strip -->
+    <section class="reward-and-mastery-bar" aria-label="TV Time Reward and Mastery Progress">
+      <!-- Left: Active Playtime -> TV Time Tracker -->
+      <div class="tv-reward-card">
+        <div class="tv-icon-wrap">
+          <span class="tv-emoji">📺</span>
+          <span id="activity-status-dot" class="activity-dot active" title="Active Play Timer Running"></span>
+        </div>
+
+        <div class="tv-progress-info">
+          <div class="tv-title-row">
+            <span class="tv-title">TV Time Reward Meter</span>
+            <span id="activity-status-label" class="activity-badge active">⚡ Active Play Counting</span>
+            <span id="tv-time-readout" class="tv-readout">00:00 / 60:00</span>
+          </div>
+          <div class="tv-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="3600" id="tv-progressbar">
+            <div id="tv-progress-fill" class="tv-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="tv-sub-row">
+            <span id="tv-earned-summary">Earned so far: <strong>0 min</strong> of TV time (1 hr active play = 1 hr TV!)</span>
+          </div>
+        </div>
+
+        <div class="tv-tickets-box">
+          <div class="ticket-count-wrap" title="Full 1-Hour TV Passes Earned">
+            <span class="ticket-label">🎟️ 1-Hr TV Passes</span>
+            <span id="tv-tickets-count" class="ticket-num">0</span>
+          </div>
+          <button id="redeem-tv-btn" class="btn btn-sm btn-tv-redeem" title="Parent button to redeem a 1-hour TV pass">
+            Use Pass
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Mastery Progress & "Prove It!" Test Trigger -->
+      <div class="mastery-Trigger-card" id="mastery-card">
+        <div class="mastery-info">
+          <div class="mastery-top-row">
+            <span class="mastery-badge" id="current-level-badge">Level 2 Practice</span>
+            <span class="mastery- readiness" id="mastery-progress-text">0 / 5 to Mastery Test</span>
+          </div>
+          <div class="mastery-dots" id="mastery-dots">
+            <span class="m-dot"></span>
+            <span class="m-dot"></span>
+            <span class="m-dot"></span>
+            <span class="m-dot"></span>
+            <span class="m-dot"></span>
+          </div>
+          <p class="mastery-desc" id="mastery-desc">
+            Solve 5 problems or take the timed test now to unlock harder math!
+          </p>
+        </div>
+        <button id="start-test-btn" class="btn btn-test-trigger">
+          ⚡ Prove It! Test
+        </button>
+      </div>
+    </section>
+
+    <!-- Mastery Test Active Banner (Only visible during Timed Test Mode) -->
+    <section id="test-mode-banner" class="test-mode-banner hidden" aria-live="polite">
+      <div class="test-banner-left">
+        <span class="test-trophy-icon">⏱️</span>
+        <div>
+          <h2 id="test-banner-title">Mastery Test — Question 1 of 5</h2>
+          <p id="test-banner-subtitle">No hints or visual tools! Answer before the timer runs out to level up!</p>
+        </div>
+      </div>
+
+      <div class="test-timer-wrap">
+        <div class="test-timer-top">
+          <span>Time Left:</span>
+          <strong id="test-timer-seconds">45s</strong>
+        </div>
+        <div class="test-timer-bar-bg">
+          <div id="test-timer-bar-fill" class="test-timer-bar-fill" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <div class="test-score-Tracker">
+        <span>Test Score:</span>
+        <strong id="test-score-display">0 / 0</strong>
+      </div>
+
+      <button id="cancel-test-btn" class="btn btn-ghost btn-sm">Exit Test</button>
+    </section>
+
     <!-- Main Equation Hero Card -->
-    <section class="equation-card" aria-label="Current Math Problem">
+    <section class="equation-card" id="equation-card" aria-label="Current Math Problem">
       <div class="equation-left">
         <span class="problem-badge" id="problem-tag">Regroup Across Zeros</span>
         <div class="equation-display">
@@ -85,13 +171,13 @@
 
       <div class="equation-actions">
         <button id="check-answer-btn" class="btn btn-primary">
-          <span>Check Answer</span> ✨
+          <span>Submit Answer</span> ✨
         </button>
         <button id="use-helper-answer-btn" class="btn btn-accent hidden" title="Copy workspace answer into box">
           <span>Fill Answer</span> ⬆️
         </button>
         <button id="new-problem-btn" class="btn btn-secondary">
-          <span>New Problem</span> 🎲
+          <span>Skip / New</span> 🎲
         </button>
       </div>
 
@@ -106,8 +192,20 @@
       </div>
     </section>
 
+    <!-- Locked Overlay Shown During Mastery Test Instead of Visual Tools -->
+    <section id="test-locked-workspace" class="test-locked-workspace hidden">
+      <div class="locked-card">
+        <div class="locked-icon">🔒🧠</div>
+        <h3>Visual Helpers Locked During Mastery Test!</h3>
+        <p>
+          You've got this, Abigail! Picture the <strong>Number Line jumps</strong>, <strong>Place-Value Decomposition</strong>, or <strong>Regrouping Blocks</strong> in your head (or on scratch paper) and type your answer above!
+        </p>
+        <div class="test-progress-pills" id="test-question-pills"></div>
+      </div>
+    </section>
+
     <!-- Strategy Switcher Tabs -->
-    <nav class="strategy-tabs" aria-label="Choose a visual solving strategy">
+    <nav id="strategy-tabs-nav" class="strategy-tabs" aria-label="Choose a visual solving strategy">
       <button class="strategy-tab active" data-tab="number-line" id="tab-btn-number-line">
         <span class="tab-emoji">🐸</span>
         <div class="tab-text">
@@ -134,7 +232,7 @@
     </nav>
 
     <!-- Strategy Workspaces -->
-    <main class="workspace-container">
+    <main id="workspace-main" class="workspace-container">
       <!-- ==================== TAB 1: THE NUMBER LINE ==================== -->
       <section id="panel-number-line" class="strategy-panel active" aria-labelledby="tab-btn-number-line">
         <div class="panel-header">
@@ -219,7 +317,7 @@
           <div>
             <h2>🧩 Decomposition (Break Apart to Subtract)</h2>
             <p class="panel-subtitle">
-              Instead of borrowing across zeros, break <strong id="decomp-sub-label">320</strong> into easy place-value pieces and subtract one piece at a time!
+              Break <strong id="decomp-sub-label">320</strong> into easy place-value pieces and subtract one piece at a time!
             </p>
           </div>
           <div class="panel-header-actions">
@@ -261,7 +359,7 @@
       <section id="panel-base10" class="strategy-panel" aria-labelledby="tab-btn-base10">
         <div class="panel-header">
           <div>
-            <h2>🧱 Base-10 Blocks (Regrouping Across Zeros)</h2>
+            <h2>🧱 Base-10 Blocks (Regrouping &amp; Trading)</h2>
             <p id="b10-instruction" class="panel-subtitle">
               We start with <strong id="b10-start-label">500</strong>. Trade 1 Hundred flat for 10 Ten rods so you have enough blocks to cross out <strong id="b10-sub-label">320</strong>!
             </p>
