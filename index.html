@@ -1,544 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Space Math Explorer</title>
-    <style>
-        :root {
-            --bg-color: #0b0c10;
-            --panel-bg: #1f2833;
-            --text-main: #c5c6c7;
-            --accent-blue: #66fcf1;
-            --accent-teal: #45a29e;
-            --success: #4caf50;
-            --warning: #ffb300;
-            --danger: #f44336;
-        }
-
-        body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        h1 { color: var(--accent-blue); text-shadow: 0 0 10px rgba(102, 252, 241, 0.5); text-align: center; }
-
-        .screen {
-            background-color: var(--panel-bg);
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-            display: none;
-            box-sizing: border-box;
-        }
-
-        .screen.active { display: block; }
-
-        /* --- DASHBOARD --- */
-        .planet-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .planet-btn {
-            background-color: #2c3e50;
-            color: white;
-            border: 2px solid #34495e;
-            border-radius: 50%;
-            width: 70px;
-            height: 70px;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .planet-btn.unlocked {
-            background-color: var(--accent-teal);
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(69, 162, 158, 0.6);
-        }
-        .planet-btn.unlocked:active { transform: scale(0.9); }
-        .planet-btn.locked { opacity: 0.4; cursor: not-allowed; }
-        
-        .planet-btn.mastered {
-            background-color: var(--success);
-            border-color: #81c784;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
-        }
-
-        /* --- CHART --- */
-        .chart-container {
-            background: #111;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            height: 200px;
-            position: relative;
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            border-left: 2px solid #555;
-            border-bottom: 2px solid #555;
-        }
-
-        .goal-line {
-            position: absolute;
-            left: 0;
-            right: 0;
-            border-top: 3px dashed var(--warning);
-            z-index: 10;
-        }
-
-        .goal-label {
-            position: absolute;
-            right: 10px;
-            top: -25px;
-            color: var(--warning);
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .chart-bar {
-            flex: 1;
-            background-color: var(--accent-blue);
-            border-radius: 5px 5px 0 0;
-            min-height: 5px;
-            position: relative;
-            transition: height 0.5s;
-        }
-        .chart-bar.fast { background-color: var(--success); }
-        .chart-bar.slow { background-color: var(--danger); }
-        
-        .chart-tooltip {
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-large {
-            background-color: var(--accent-blue);
-            color: #000;
-            border: none;
-            border-radius: 15px;
-            padding: 15px 30px;
-            font-size: 24px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #3a8e88;
-        }
-        .btn-large:active { transform: translateY(5px); box-shadow: none; }
-
-        /* --- GAMEPLAY --- */
-        .hud { display: flex; justify-content: space-between; font-size: 24px; margin-bottom: 20px; font-weight: bold; }
-        .timer { color: var(--warning); font-family: monospace; font-size: 30px;}
-        
-        .equation {
-            font-size: 80px;
-            text-align: center;
-            margin: 20px 0;
-            font-weight: bold;
-            color: white;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .answer-box {
-            width: 120px;
-            border-bottom: 5px solid var(--accent-blue);
-            color: var(--accent-blue);
-            text-align: center;
-            min-height: 90px;
-        }
-
-        .progress-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 30px;
-        }
-        .dot { width: 15px; height: 15px; background: #555; border-radius: 50%; }
-        .dot.done { background: var(--success); box-shadow: 0 0 10px var(--success); }
-
-        /* NUMPAD */
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-        .num-btn {
-            background-color: #34495e;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 20px;
-            font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #2c3e50;
-        }
-        .num-btn:active { transform: translateY(5px); box-shadow: none; }
-        .num-btn.clear { background-color: var(--danger); box-shadow: 0 5px 0 #c62828; }
-
-        /* --- REPORT SCREEN --- */
-        .stat-box {
-            background: #111;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .stat-value { font-size: 48px; font-weight: bold; color: var(--accent-blue); }
-        .feedback { font-size: 24px; text-align: center; color: var(--warning); min-height: 40px; margin-bottom: 20px;}
-
-        /* CONFETTI */
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background-color: var(--success);
-            z-index: 1000;
-            animation: fall 3s linear forwards;
-        }
-        @keyframes fall {
-            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abigail's Subtraction Adventure — Regrouping Across Zeros</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
-    <h1>🚀 Space Math Explorer 🚀</h1>
+  <div class="app-shell">
+    <!-- Top Header: Personalized Title, Mode Selector, & Scoreboard -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="avatar-badge" aria-hidden="true">🌟</div>
+        <div>
+          <h1>Abigail's Subtraction Studio</h1>
+          <p class="subtitle">Master 3-Digit Subtraction Across Zeros!</p>
+        </div>
+      </div>
 
-    <!-- DASHBOARD SCREEN -->
-    <div id="dashboard" class="screen active">
-        <h2 style="text-align: center; margin-top: 0;">Select Your Planet</h2>
-        <div class="planet-grid" id="planetGrid"></div>
-        
-        <h3 id="chartTitle" style="text-align: center; margin-top: 30px;">Progress: Planet 2</h3>
-        <p style="text-align: center; font-size: 14px; color: #888;">Goal: 3.0 seconds per problem</p>
-        <div class="chart-container" id="progressChart">
-            <div class="goal-line" id="goalLine">
-                <div class="goal-label">3.0s Goal</div>
+      <div class="controls-and-stats">
+        <div class="mode-selector" role="group" aria-label="Problem Type">
+          <label for="difficulty-select" class="mode-label">Mode:</label>
+          <select id="difficulty-select" class="mode-dropdown">
+            <option value="mixed" selected>Mixed (e.g., 500 − 320 &amp; 400 − 275)</option>
+            <option value="tens">Friendly Tens (e.g., 500 − 320)</option>
+            <option value="ones">Hundreds, Tens &amp; Ones (e.g., 400 − 275)</option>
+          </select>
+        </div>
+
+        <div class="stats-pills">
+          <div class="stat-pill score-pill" title="Total Star Points">
+            <span class="stat-icon">⭐</span>
+            <div>
+              <span class="stat-label">Stars</span>
+              <span id="score-value" class="stat-num">0</span>
             </div>
-            <!-- Bars injected via JS -->
+          </div>
+          <div class="stat-pill streak-pill" title="Current Correct Streak">
+            <span class="stat-icon">🔥</span>
+            <div>
+              <span class="stat-label">Streak</span>
+              <span id="streak-value" class="stat-num">0</span>
+            </div>
+          </div>
+          <div class="stat-pill solved-pill" title="Total Problems Solved">
+            <span class="stat-icon">🏆</span>
+            <div>
+              <span class="stat-label">Solved</span>
+              <span id="solved-value" class="stat-num">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Equation Hero Card -->
+    <section class="equation-card" aria-label="Current Math Problem">
+      <div class="equation-left">
+        <span class="problem-badge" id="problem-tag">Regroup Across Zeros</span>
+        <div class="equation-display">
+          <span id="minuend-display" class="eq-number minuend-color">500</span>
+          <span class="eq-operator">−</span>
+          <span id="subtrahend-display" class="eq-number subtrahend-color">320</span>
+          <span class="eq-operator">=</span>
+          <div class="answer-input-wrap">
+            <input
+              type="number"
+              id="final-answer-input"
+              class="final-answer-input"
+              placeholder="?"
+              min="0"
+              max="999"
+              aria-label="Your answer"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="equation-actions">
+        <button id="check-answer-btn" class="btn btn-primary">
+          <span>Check Answer</span> ✨
+        </button>
+        <button id="use-helper-answer-btn" class="btn btn-accent hidden" title="Copy workspace answer into box">
+          <span>Fill Answer</span> ⬆️
+        </button>
+        <button id="new-problem-btn" class="btn btn-secondary">
+          <span>New Problem</span> 🎲
+        </button>
+      </div>
+
+      <!-- Feedback Banner -->
+      <div id="feedback-banner" class="feedback-banner hidden" role="status" aria-live="polite">
+        <span id="feedback-icon" class="feedback-icon">🎉</span>
+        <div class="feedback-text-wrap">
+          <strong id="feedback-title">Awesome job, Abigail!</strong>
+          <p id="feedback-message">You nailed it!</p>
+        </div>
+        <button id="next-after-win-btn" class="btn btn-sm btn-win hidden">Next Problem ➜</button>
+      </div>
+    </section>
+
+    <!-- Strategy Switcher Tabs -->
+    <nav class="strategy-tabs" aria-label="Choose a visual solving strategy">
+      <button class="strategy-tab active" data-tab="number-line" id="tab-btn-number-line">
+        <span class="tab-emoji">🐸</span>
+        <div class="tab-text">
+          <span class="tab-title">1. The Number Line</span>
+          <span class="tab-desc">Count up in friendly jumps!</span>
+        </div>
+      </button>
+
+      <button class="strategy-tab" data-tab="decomposition" id="tab-btn-decomposition">
+        <span class="tab-emoji">🧩</span>
+        <div class="tab-text">
+          <span class="tab-title">2. Decomposition</span>
+          <span class="tab-desc">Break apart hundreds, tens &amp; ones</span>
+        </div>
+      </button>
+
+      <button class="strategy-tab" data-tab="base10" id="tab-btn-base10">
+        <span class="tab-emoji">🧱</span>
+        <div class="tab-text">
+          <span class="tab-title">3. Base-10 Blocks</span>
+          <span class="tab-desc">Trade a hundred for 10 tens!</span>
+        </div>
+      </button>
+    </nav>
+
+    <!-- Strategy Workspaces -->
+    <main class="workspace-container">
+      <!-- ==================== TAB 1: THE NUMBER LINE ==================== -->
+      <section id="panel-number-line" class="strategy-panel active" aria-labelledby="tab-btn-number-line">
+        <div class="panel-header">
+          <div>
+            <h2>🐸 Counting Up on the Number Line</h2>
+            <p id="nl-instruction" class="panel-subtitle">
+              Start at <strong id="nl-start-num">320</strong> and hop in friendly chunks until you reach <strong id="nl-target-num">500</strong>!
+            </p>
+          </div>
+          <div class="panel-header-actions">
+            <button id="nl-auto-guide-btn" class="btn btn-outline btn-sm">💡 Show Next Friendly Hop</button>
+            <button id="nl-undo-btn" class="btn btn-ghost btn-sm" disabled>↩️ Undo Hop</button>
+            <button id="nl-reset-btn" class="btn btn-ghost btn-sm">🔄 Reset Line</button>
+          </div>
         </div>
 
-        <button class="btn-large" onclick="startMission()">Launch Mission! 🛸</button>
-    </div>
+        <!-- SVG Number Line Stage -->
+        <div class="nl-stage-card">
+          <div class="nl-status-strip">
+            <div class="nl-stat-box">
+              <span class="nl-stat-label">Starting At</span>
+              <span id="nl-stat-start" class="nl-stat-val subtrahend-text">320</span>
+            </div>
+            <div class="nl-stat-arrow">➜</div>
+            <div class="nl-stat-box current-pos-box">
+              <span class="nl-stat-label">Current Spot</span>
+              <span id="nl-stat-current" class="nl-stat-val">320</span>
+            </div>
+            <div class="nl-stat-arrow">➜</div>
+            <div class="nl-stat-box">
+              <span class="nl-stat-label">Goal</span>
+              <span id="nl-stat-goal" class="nl-stat-val minuend-text">500</span>
+            </div>
+            <div class="nl-stat-box total-distance-box">
+              <span class="nl-stat-label">Total Distance Jumped (Difference)</span>
+              <span id="nl-stat-distance" class="nl-stat-val highlight-distance">0</span>
+            </div>
+          </div>
 
-    <!-- GAMEPLAY SCREEN -->
-    <div id="gameplay" class="screen">
-        <div class="hud">
-            <div>Planet <span id="currentPlanetDisp">2</span></div>
-            <div class="timer" id="timerDisp">0.0s</div>
-        </div>
-        
-        <div class="progress-dots" id="progressDots"></div>
+          <div class="nl-svg-wrapper">
+            <svg id="number-line-svg" viewBox="0 0 900 230" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interactive Number Line"></svg>
+          </div>
 
-        <div class="equation">
-            <span id="factor1">2</span> 
-            <span>×</span> 
-            <span id="factor2">4</span> 
-            <span>=</span>
-            <div class="answer-box" id="answerBox"></div>
-        </div>
-
-        <div class="numpad">
-            <button class="num-btn" onclick="inputNum(1)">1</button>
-            <button class="num-btn" onclick="inputNum(2)">2</button>
-            <button class="num-btn" onclick="inputNum(3)">3</button>
-            <button class="num-btn" onclick="inputNum(4)">4</button>
-            <button class="num-btn" onclick="inputNum(5)">5</button>
-            <button class="num-btn" onclick="inputNum(6)">6</button>
-            <button class="num-btn" onclick="inputNum(7)">7</button>
-            <button class="num-btn" onclick="inputNum(8)">8</button>
-            <button class="num-btn" onclick="inputNum(9)">9</button>
-            <button class="num-btn clear" onclick="clearNum()">Del</button>
-            <button class="num-btn" onclick="inputNum(0)">0</button>
-            <button class="num-btn clear" style="background:#888; box-shadow: 0 5px 0 #555" onclick="clearNum(true)">C</button>
-        </div>
-    </div>
-
-    <!-- MISSION REPORT SCREEN -->
-    <div id="report" class="screen">
-        <h2 style="text-align: center; font-size: 36px; color: var(--success);">Mission Complete! 🌟</h2>
-        
-        <div class="stat-box">
-            <div>Average Time per Problem</div>
-            <div class="stat-value" id="avgTimeDisp">2.4s</div>
+          <!-- Jump Equation Builder -->
+          <div id="nl-jumps-summary" class="nl-jumps-summary">
+            <span class="jumps-label">Hops Added:</span>
+            <span id="nl-jumps-equation" class="jumps-equation">Click a hop button below to start jumping!</span>
+          </div>
         </div>
 
-        <div class="feedback" id="feedbackMsg"></div>
+        <!-- Hop Controls -->
+        <div class="nl-controls-grid">
+          <div class="nl-recommended-card">
+            <h3>🎯 Guided Friendly Hops</h3>
+            <p id="nl-guide-prompt" class="guide-prompt">Step 1: Jump to the next friendly number!</p>
+            <div id="nl-smart-buttons" class="smart-hop-buttons"></div>
+          </div>
 
-        <button class="btn-large" onclick="returnToDashboard()">Back to Mission Control</button>
-    </div>
+          <div class="nl-custom-hops-card">
+            <h3>🚀 Or Pick Any Hop Size</h3>
+            <div class="hop-groups">
+              <div class="hop-group" id="nl-ones-group">
+                <span class="hop-group-title">Ones</span>
+                <div class="hop-btn-row" id="nl-ones-buttons"></div>
+              </div>
+              <div class="hop-group">
+                <span class="hop-group-title">Tens</span>
+                <div class="hop-btn-row" id="nl-tens-buttons"></div>
+              </div>
+              <div class="hop-group">
+                <span class="hop-group-title">Hundreds</span>
+                <div class="hop-btn-row" id="nl-hundreds-buttons"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <script>
-        // --- GAME STATE & DATA ---
-        const TARGET_GOAL_SECONDS = 3.0;
-        let gameData = JSON.parse(localStorage.getItem('mathExplorerData')) || {
-            unlockedPlanet: 2,
-            history: {} // Format: { "2": [ { date: "...", avgTime: 2.5 } ] }
-        };
+      <!-- ==================== TAB 2: DECOMPOSITION ==================== -->
+      <section id="panel-decomposition" class="strategy-panel" aria-labelledby="tab-btn-decomposition">
+        <div class="panel-header">
+          <div>
+            <h2>🧩 Decomposition (Break Apart to Subtract)</h2>
+            <p class="panel-subtitle">
+              Instead of borrowing across zeros, break <strong id="decomp-sub-label">320</strong> into easy place-value pieces and subtract one piece at a time!
+            </p>
+          </div>
+          <div class="panel-header-actions">
+            <button id="decomp-reveal-btn" class="btn btn-outline btn-sm">💡 Fill Next Step</button>
+            <button id="decomp-reset-btn" class="btn btn-ghost btn-sm">🔄 Reset Steps</button>
+          </div>
+        </div>
 
-        let selectedPlanet = gameData.unlockedPlanet;
-        let currentQuestions = [];
-        let questionIndex = 0;
-        let startTime = 0;
-        let timerInterval = null;
-        let currentAnswer = "";
+        <div class="decomp-layout">
+          <!-- Left: Visual Number Bond / Break Apart Tree -->
+          <div class="decomp-tree-card">
+            <h3>1. Break Apart the Subtracted Number</h3>
+            <div class="number-bond-diagram">
+              <div class="bond-top-node" id="bond-total-node">320</div>
+              <svg class="bond-lines-svg" viewBox="0 0 300 60" preserveAspectRatio="none">
+                <line id="bond-line-left" x1="150" y1="5" x2="55" y2="55" stroke="#6366f1" stroke-width="4" stroke-linecap="round" />
+                <line id="bond-line-mid" x1="150" y1="5" x2="150" y2="55" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" />
+                <line id="bond-line-right" x1="150" y1="5" x2="245" y2="55" stroke="#10b981" stroke-width="4" stroke-linecap="round" />
+              </svg>
+              <div id="bond-parts-row" class="bond-parts-row"></div>
+            </div>
 
-        // --- INIT ---
-        function initDashboard() {
-            // Build Planet Grid (2 through 12)
-            const grid = document.getElementById('planetGrid');
-            grid.innerHTML = '';
-            for (let i = 2; i <= 12; i++) {
-                let btn = document.createElement('div');
-                btn.className = 'planet-btn ' + (i <= gameData.unlockedPlanet ? 'unlocked' : 'locked');
-                
-                // Check if mastered (has at least one score <= TARGET_GOAL_SECONDS)
-                if (gameData.history[i] && gameData.history[i].some(run => run.avgTime <= TARGET_GOAL_SECONDS)) {
-                    btn.classList.add('mastered');
-                }
+            <div class="decomp-bar-visualizer">
+              <h4>Visual Shrink Bar</h4>
+              <div class="bar-whole" id="decomp-bar-whole">500</div>
+              <div class="bar-segments" id="decomp-bar-segments"></div>
+            </div>
+          </div>
 
-                btn.innerText = i;
-                if (i <= gameData.unlockedPlanet) {
-                    btn.onclick = () => selectPlanet(i);
-                }
-                grid.appendChild(btn);
-            }
-            selectPlanet(selectedPlanet > gameData.unlockedPlanet ? gameData.unlockedPlanet : selectedPlanet);
-        }
+          <!-- Right: Interactive Step-by-Step Subtraction Cards -->
+          <div class="decomp-steps-column">
+            <h3>2. Subtract One Chunk at a Time</h3>
+            <div id="decomp-steps-list" class="decomp-steps-list"></div>
+          </div>
+        </div>
+      </section>
 
-        function selectPlanet(planetNum) {
-            selectedPlanet = planetNum;
-            document.getElementById('chartTitle').innerText = `Progress: Planet ${planetNum}`;
-            renderChart(planetNum);
-        }
+      <!-- ==================== TAB 3: BASE-10 BLOCKS ==================== -->
+      <section id="panel-base10" class="strategy-panel" aria-labelledby="tab-btn-base10">
+        <div class="panel-header">
+          <div>
+            <h2>🧱 Base-10 Blocks (Regrouping Across Zeros)</h2>
+            <p id="b10-instruction" class="panel-subtitle">
+              We start with <strong id="b10-start-label">500</strong>. Trade 1 Hundred flat for 10 Ten rods so you have enough blocks to cross out <strong id="b10-sub-label">320</strong>!
+            </p>
+          </div>
+          <div class="panel-header-actions">
+            <button id="b10-auto-regroup-btn" class="btn btn-outline btn-sm">🪄 Auto-Regroup Blocks</button>
+            <button id="b10-reset-btn" class="btn btn-ghost btn-sm">🔄 Reset Blocks</button>
+          </div>
+        </div>
 
-        // --- CHARTING LOGIC ---
-        function renderChart(planetNum) {
-            const chart = document.getElementById('progressChart');
-            const data = gameData.history[planetNum] || [];
-            
-            // Clear existing bars
-            document.querySelectorAll('.chart-bar').forEach(e => e.remove());
+        <!-- Regrouping Action Bar & Subtraction Checklist -->
+        <div class="b10-dashboard">
+          <div class="b10-trade-controls">
+            <button id="trade-hundred-btn" class="btn btn-trade-hundred">
+              🔨 Trade 1 Hundred ➜ 10 Tens
+            </button>
+            <button id="trade-ten-btn" class="btn btn-trade-ten">
+              🔨 Trade 1 Ten ➜ 10 Ones
+            </button>
+          </div>
 
-            // We will graph up to the last 10 attempts
-            const recentData = data.slice(-10);
-            
-            // Max Y value for the chart to scale properly (either 10 seconds, or highest actual time)
-            let maxTime = Math.max(10, ...recentData.map(d => d.avgTime));
-            
-            // Position the goal line dynamically based on maxTime
-            const goalLine = document.getElementById('goalLine');
-            const goalPercentage = (TARGET_GOAL_SECONDS / maxTime) * 100;
-            goalLine.style.bottom = `${goalPercentage}%`;
+          <div class="b10-checklist" id="b10-checklist">
+            <!-- Dynamically populated checklist for Hundreds, Tens, Ones to cross out -->
+          </div>
 
-            recentData.forEach(run => {
-                let bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                
-                // Color coding based on speed
-                if (run.avgTime <= TARGET_GOAL_SECONDS) bar.classList.add('fast');
-                else if (run.avgTime > 5.0) bar.classList.add('slow');
+          <div class="b10-remaining-box">
+            <span class="rem-label">Blocks Remaining</span>
+            <span id="b10-remaining-value" class="rem-value">500</span>
+          </div>
+        </div>
 
-                // Height relative to maxTime
-                let heightPct = (run.avgTime / maxTime) * 100;
-                bar.style.height = `${heightPct}%`;
+        <!-- Place Value Mat: Hundreds | Tens | Ones -->
+        <div class="place-value-mat">
+          <!-- HUNDREDS COLUMN -->
+          <div class="pv-column pv-hundreds">
+            <div class="pv-col-header">
+              <div>
+                <h3>Hundreds (100s)</h3>
+                <span class="pv-col-hint">Click a flat to cross out <strong id="b10-need-h">3</strong> hundreds</span>
+              </div>
+              <span id="b10-count-h" class="pv-count-badge">5 left</span>
+            </div>
+            <div id="b10-hundreds-tray" class="pv-tray hundreds-tray"></div>
+          </div>
 
-                // Tooltip
-                let tt = document.createElement('div');
-                tt.className = 'chart-tooltip';
-                tt.innerText = run.avgTime.toFixed(1) + 's';
-                bar.appendChild(tt);
+          <!-- TENS COLUMN -->
+          <div class="pv-column pv-tens">
+            <div class="pv-col-header">
+              <div>
+                <h3>Tens (10s)</h3>
+                <span class="pv-col-hint">Click a rod to cross out <strong id="b10-need-t">2</strong> tens</span>
+              </div>
+              <span id="b10-count-t" class="pv-count-badge">0 left</span>
+            </div>
+            <div id="b10-tens-tray" class="pv-tray tens-tray"></div>
+          </div>
 
-                chart.appendChild(bar);
-            });
-        }
+          <!-- ONES COLUMN -->
+          <div class="pv-column pv-ones" id="b10-ones-col">
+            <div class="pv-col-header">
+              <div>
+                <h3>Ones (1s)</h3>
+                <span class="pv-col-hint">Click a cube to cross out <strong id="b10-need-o">0</strong> ones</span>
+              </div>
+              <span id="b10-count-o" class="pv-count-badge">0 left</span>
+            </div>
+            <div id="b10-ones-tray" class="pv-tray ones-tray"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-        // --- GAMEPLAY LOGIC ---
-        function startMission() {
-            // Generate packet (1 through 12, shuffled)
-            currentQuestions = [];
-            for (let i = 1; i <= 12; i++) {
-                currentQuestions.push(i);
-            }
-            // Shuffle
-            currentQuestions.sort(() => Math.random() - 0.5);
-            
-            questionIndex = 0;
-            currentAnswer = "";
-
-            // Setup UI
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('gameplay').classList.add('active');
-            document.getElementById('currentPlanetDisp').innerText = selectedPlanet;
-            
-            // Setup Progress Dots
-            const dots = document.getElementById('progressDots');
-            dots.innerHTML = '';
-            for (let i = 0; i < 12; i++) {
-                let dot = document.createElement('div');
-                dot.className = 'dot';
-                dot.id = 'dot_' + i;
-                dots.appendChild(dot);
-            }
-
-            loadQuestion();
-            
-            startTime = Date.now();
-            timerInterval = setInterval(updateTimer, 100);
-        }
-
-        function updateTimer() {
-            let elapsed = (Date.now() - startTime) / 1000;
-            document.getElementById('timerDisp').innerText = elapsed.toFixed(1) + 's';
-        }
-
-        function loadQuestion() {
-            currentAnswer = "";
-            document.getElementById('answerBox').innerText = "";
-            document.getElementById('factor1').innerText = selectedPlanet;
-            document.getElementById('factor2').innerText = currentQuestions[questionIndex];
-        }
-
-        // INPUT HANDLING
-        function inputNum(num) {
-            if (currentAnswer.length < 3) {
-                currentAnswer += num.toString();
-                document.getElementById('answerBox').innerText = currentAnswer;
-                checkAnswer();
-            }
-        }
-
-        function clearNum(all = false) {
-            if (all) {
-                currentAnswer = "";
-            } else {
-                currentAnswer = currentAnswer.slice(0, -1);
-            }
-            document.getElementById('answerBox').innerText = currentAnswer;
-        }
-
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-            if (!document.getElementById('gameplay').classList.contains('active')) return;
-            if (e.key >= '0' && e.key <= '9') {
-                inputNum(e.key);
-            } else if (e.key === 'Backspace') {
-                clearNum();
-            }
-        });
-
-        function checkAnswer() {
-            let correct = selectedPlanet * currentQuestions[questionIndex];
-            
-            // AUTO ADVANCE: Instantly check if they typed the exact correct answer.
-            // If the correct answer is 2, typing '2' triggers this instantly.
-            // If the correct answer is 20, typing '2' does not trigger, typing '0' triggers.
-            if (parseInt(currentAnswer) === correct) {
-                document.getElementById('dot_' + questionIndex).classList.add('done');
-                questionIndex++;
-                
-                if (questionIndex >= 12) {
-                    finishMission();
-                } else {
-                    loadQuestion();
-                }
-            }
-        }
-
-        // --- END GAME & SAVING ---
-        function finishMission() {
-            clearInterval(timerInterval);
-            let totalTime = (Date.now() - startTime) / 1000;
-            let avgTime = totalTime / 12;
-
-            // Save Data
-            if (!gameData.history[selectedPlanet]) {
-                gameData.history[selectedPlanet] = [];
-            }
-            gameData.history[selectedPlanet].push({
-                date: new Date().toISOString(),
-                avgTime: avgTime
-            });
-
-            // Unlock Logic
-            let feedback = "";
-            let beatGoal = avgTime <= TARGET_GOAL_SECONDS;
-
-            if (beatGoal) {
-                if (selectedPlanet == gameData.unlockedPlanet && selectedPlanet < 12) {
-                    gameData.unlockedPlanet++;
-                    feedback = `Amazing speed! You unlocked Planet ${selectedPlanet + 1}! 🚀`;
-                } else {
-                    feedback = "Perfect! You're a Math Ninja! 🥷";
-                }
-                triggerConfetti();
-            } else {
-                feedback = `Great practice! Try to get under ${TARGET_GOAL_SECONDS.toFixed(1)}s to master this planet!`;
-            }
-
-            localStorage.setItem('mathExplorerData', JSON.stringify(gameData));
-
-            // Show UI
-            document.getElementById('gameplay').classList.remove('active');
-            document.getElementById('report').classList.add('active');
-            document.getElementById('avgTimeDisp').innerText = avgTime.toFixed(2) + 's';
-            
-            // Color code final time
-            const avgDisp = document.getElementById('avgTimeDisp');
-            avgDisp.style.color = beatGoal ? 'var(--success)' : (avgTime < 5 ? 'var(--warning)' : 'var(--danger)');
-            
-            document.getElementById('feedbackMsg').innerText = feedback;
-        }
-
-        function returnToDashboard() {
-            document.getElementById('report').classList.remove('active');
-            document.getElementById('dashboard').classList.add('active');
-            initDashboard(); // Refresh UI and charts
-        }
-
-        // --- EFFECTS ---
-        function triggerConfetti() {
-            for (let i = 0; i < 50; i++) {
-                let conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.backgroundColor = ['#66fcf1', '#4caf50', '#ffb300', '#f44336', '#fff'][Math.floor(Math.random()*5)];
-                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                document.body.appendChild(conf);
-                setTimeout(() => conf.remove(), 4000);
-            }
-        }
-
-        // Start App
-        initDashboard();
-
-    </script>
+  <script src="app.js"></script>
 </body>
 </html>
